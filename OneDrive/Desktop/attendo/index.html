@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #5cffb0;
+    --accent2: #ff5c8a;
+    --accent3: #5ca8ff;
+    --text: #e8eaf0;
+    --muted: #6b7291;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; padding: 0 0 60px; }
+ 
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+  }
+  .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+  .logo span { color: var(--accent); }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+ 
+  .header-stats { display: flex; gap: 28px; font-size: 12px; color: var(--muted); }
+  .stat-pill { display: flex; align-items: center; gap: 6px; }
+  .stat-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-green { background: var(--accent); }
+  .dot-red   { background: var(--accent2); }
+  .dot-blue  { background: var(--accent3); }
+  .stat-val  { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--text); }
+ 
+  .datebar {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 12px 36px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--muted);
+  }
+  #today-date { font-family: 'Syne', sans-serif; color: var(--accent3); font-size: 13px; font-weight: 600; }
+ 
+  main { max-width: 980px; margin: 0 auto; padding: 36px 24px 0; }
+ 
+  .add-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px 28px; margin-bottom: 32px; position: relative; overflow: hidden;
+  }
+  .add-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+  .section-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+ 
+  .input-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+  .input-group label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+ 
+  .roll-preview {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--accent3); font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800;
+    padding: 10px 14px; min-width: 72px; text-align: center; letter-spacing: 1px; align-self: flex-end;
+  }
+ 
+  input[type="text"] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px;
+    padding: 10px 14px; width: 100%; transition: border-color 0.2s; outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+ 
+  .btn-add {
+    background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 26px;
+    cursor: pointer; align-self: flex-end; letter-spacing: 0.5px;
+    transition: opacity 0.2s, transform 0.1s; white-space: nowrap;
+  }
+  .btn-add:hover { opacity: 0.85; }
+  .btn-add:active { transform: scale(0.97); }
+ 
+  .controls-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+  .count-label { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .count-label span { color: var(--text); }
+  .bulk-btns { display: flex; gap: 8px; }
+  .btn-bulk {
+    font-family: 'DM Mono', monospace; font-size: 11px; padding: 7px 14px;
+    border-radius: 6px; border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-bulk:hover { border-color: var(--accent); color: var(--accent); }
+ 
+  .btn-download {
+    background: transparent; border: 1px solid var(--accent3); color: var(--accent3);
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; padding: 8px 18px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 7px;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .btn-download:hover { background: var(--accent3); color: #0d0f14; }
+ 
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--surface2); font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; animation: rowIn 0.3s ease both; }
+  @keyframes rowIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 14px 20px; font-size: 13px; vertical-align: middle; }
+  .td-roll { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent3); font-size: 13px; letter-spacing: 0.5px; }
+  .td-name { font-size: 14px; }
+ 
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: 0.5px; }
+  .badge-present { background: rgba(92,255,176,0.10); color: var(--accent); border: 1px solid rgba(92,255,176,0.25); }
+  .badge-absent  { background: rgba(255,92,138,0.10); color: var(--accent2); border: 1px solid rgba(255,92,138,0.25); }
+  .badge-none    { background: rgba(107,114,145,0.1); color: var(--muted); border: 1px solid rgba(107,114,145,0.2); }
+ 
+  .action-btns { display: flex; gap: 7px; align-items: center; }
+  .btn-present, .btn-absent { font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 13px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; transition: all 0.15s; letter-spacing: 0.3px; }
+  .btn-present { background: rgba(92,255,176,0.12); color: var(--accent); border: 1px solid rgba(92,255,176,0.3); }
+  .btn-present:hover { background: rgba(92,255,176,0.22); }
+  .btn-present.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+  .btn-absent { background: rgba(255,92,138,0.10); color: var(--accent2); border: 1px solid rgba(255,92,138,0.25); }
+  .btn-absent:hover { background: rgba(255,92,138,0.20); }
+  .btn-absent.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+ 
+  .btn-del { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 13px; transition: all 0.15s; line-height: 1; }
+  .btn-del:hover { border-color: var(--accent2); color: var(--accent2); }
+ 
+  .empty-state { text-align: center; padding: 64px 24px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-state p { color: var(--muted); font-size: 13px; }
+ 
+  .progress-section { margin-bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+  .progress-pct { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); }
+  .progress-bar-bg { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 4px; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+ 
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; font-size: 13px; color: var(--text); z-index: 999; transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(.4,0,.2,1); pointer-events: none; max-width: 280px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+ 
+  @media (max-width: 600px) {
+    header { padding: 16px 18px; }
+    main { padding: 20px 12px 0; }
+    .header-stats { gap: 14px; }
+    td, th { padding: 12px 12px; }
+    .btn-present, .btn-absent { padding: 5px 9px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+ 
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Attend<span>IO</span>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill"><div class="stat-dot dot-blue"></div><span>Total <span class="stat-val" id="hd-total">0</span></span></div>
+    <div class="stat-pill"><div class="stat-dot dot-green"></div><span>Present <span class="stat-val" id="hd-present">0</span></span></div>
+    <div class="stat-pill"><div class="stat-dot dot-red"></div><span>Absent <span class="stat-val" id="hd-absent">0</span></span></div>
+  </div>
+</header>
+ 
+<div class="datebar">
+  <span id="today-date"></span>
+  <span id="marked-count">0 marked</span>
+</div>
+ 
+<main>
+  <div class="add-section">
+    <div class="section-label">↳ Add Student</div>
+    <div class="input-row">
+      <div class="input-group" style="flex:0 0 auto;">
+        <label>Auto Roll No.</label>
+        <div class="roll-preview" id="roll-preview">#01</div>
+      </div>
+      <div class="input-group">
+        <label>Student Name</label>
+        <input type="text" id="inp-name" placeholder="Type name and press Enter...">
+      </div>
+      <button class="btn-add" onclick="addStudent()">+ Add</button>
+    </div>
+  </div>
+ 
+  <div class="progress-section" id="progress-section" style="display:none;">
+    <div class="progress-header">
+      <span>Attendance Rate</span>
+      <span class="progress-pct" id="pct-text">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+ 
+  <div class="controls-row">
+    <div class="count-label">Students: <span id="student-count">0</span></div>
+    <div class="bulk-btns">
+      <button class="btn-bulk" onclick="markAll('present')">✓ All Present</button>
+      <button class="btn-bulk" onclick="markAll('absent')">✕ All Absent</button>
+      <button class="btn-bulk" onclick="clearAll()">↺ Clear</button>
+    </div>
+    <button class="btn-download" onclick="downloadPDF()">↓ Download PDF</button>
+  </div>
+ 
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Roll No.</th>
+          <th>Student Name</th>
+          <th>Status</th>
+          <th>Actions</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="student-tbody">
+        <tr id="empty-row">
+          <td colspan="5">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <p>No students added yet.<br>Add a student above to get started.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+ 
+<div class="toast" id="toast"></div>
+ 
+<script>
+let students = JSON.parse(localStorage.getItem('attendio_students') || '[]');
+ 
+function save() { localStorage.setItem('attendio_students', JSON.stringify(students)); }
+ 
+function toast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color || '#252a38';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+ 
+function setDate() {
+  document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+ 
+function render() {
+  const tbody = document.getElementById('student-tbody');
+  tbody.innerHTML = '';
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📋</div><p>No students added yet.<br>Add a student above to get started.</p></div></td></tr>`;
+    updateStats(); return;
+  }
+  students.sort((a,b) => a.roll - b.roll);
+  students.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    let badge = `<span class="status-badge badge-none">— unmarked</span>`;
+    if (s.status === 'present') badge = `<span class="status-badge badge-present">✓ Present</span>`;
+    if (s.status === 'absent')  badge = `<span class="status-badge badge-absent">✕ Absent</span>`;
+    tr.innerHTML = `
+      <td class="td-roll">#${String(s.roll).padStart(2,'0')}</td>
+      <td class="td-name">${s.name}</td>
+      <td>${badge}</td>
+      <td><div class="action-btns">
+        <button class="btn-present ${s.status==='present'?'active':''}" onclick="mark(${i},'present')">✓ Present</button>
+        <button class="btn-absent  ${s.status==='absent' ?'active':''}" onclick="mark(${i},'absent')">✕ Absent</button>
+      </div></td>
+      <td><button class="btn-del" onclick="deleteStudent(${i})">🗑</button></td>`;
+    tbody.appendChild(tr);
+  });
+  updateStats();
+}
+ 
+function updateStats() {
+  const total   = students.length;
+  const present = students.filter(s=>s.status==='present').length;
+  const absent  = students.filter(s=>s.status==='absent').length;
+  const marked  = present + absent;
+  const pct     = total > 0 ? Math.round((present/total)*100) : 0;
+  document.getElementById('hd-total').textContent   = total;
+  document.getElementById('hd-present').textContent = present;
+  document.getElementById('hd-absent').textContent  = absent;
+  document.getElementById('student-count').textContent = total;
+  document.getElementById('marked-count').textContent  = `${marked} of ${total} marked`;
+  const ps = document.getElementById('progress-section');
+  if (total > 0) {
+    ps.style.display = 'block';
+    document.getElementById('pct-text').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+  } else { ps.style.display = 'none'; }
+}
+ 
+function nextRoll() { return students.length === 0 ? 1 : Math.max(...students.map(s=>s.roll)) + 1; }
+function updateRollPreview() { document.getElementById('roll-preview').textContent = '#' + String(nextRoll()).padStart(2,'0'); }
+ 
+function addStudent() {
+  const inp = document.getElementById('inp-name');
+  const name = inp.value.trim();
+  if (!name) { toast('⚠ Enter a student name', '#ff5c8a'); inp.focus(); return; }
+  const roll = nextRoll();
+  students.push({ roll, name, status: null });
+  save(); render(); inp.value = ''; inp.focus(); updateRollPreview();
+  toast(`✓ ${name} added as #${String(roll).padStart(2,'0')}`, '#5cffb0');
+}
+ 
+function deleteStudent(i) {
+  const name = students[i].name;
+  students.splice(i, 1);
+  save(); render(); updateRollPreview();
+  toast(`Removed ${name}`, '#ff5c8a');
+}
+ 
+function mark(i, status) {
+  students[i].status = students[i].status === status ? null : status;
+  save(); render();
+}
+ 
+function markAll(status) {
+  students.forEach(s => s.status = status);
+  save(); render();
+  toast(`All marked ${status}`, status==='present'?'#5cffb0':'#ff5c8a');
+}
+ 
+function clearAll() {
+  students.forEach(s => s.status = null);
+  save(); render(); toast('Attendance cleared');
+}
+ 
+// ─── PDF DOWNLOAD ────────────────────────────────────────────────────────────
+function downloadPDF() {
+  if (students.length === 0) { toast('No students to download', '#ff5c8a'); return; }
+ 
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+ 
+  const present  = students.filter(s=>s.status==='present').length;
+  const absent   = students.filter(s=>s.status==='absent').length;
+  const unmarked = students.filter(s=>!s.status).length;
+  const pct      = Math.round((present / students.length) * 100);
+  const dateStr  = new Date().toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+ 
+  // Header background
+  doc.setFillColor(19, 22, 30);
+  doc.rect(0, 0, pageW, 32, 'F');
+ 
+  // Logo text
+  doc.setTextColor(92, 255, 176);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.text('AttendIO', 14, 20);
+ 
+  // Subtitle
+  doc.setTextColor(107, 114, 145);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('ATTENDANCE REPORT', pageW - 14, 14, { align: 'right' });
+  doc.setTextColor(200, 210, 230);
+  doc.setFontSize(9);
+  doc.text(dateStr, pageW - 14, 22, { align: 'right' });
+ 
+  // Accent line under header
+  doc.setDrawColor(92, 255, 176);
+  doc.setLineWidth(0.5);
+  doc.line(0, 32, pageW * (pct/100), 32);
+  doc.setDrawColor(37, 42, 56);
+  doc.setLineWidth(0.3);
+  doc.line(pageW * (pct/100), 32, pageW, 32);
+ 
+  // Summary stat boxes
+  const stats = [
+    { label: 'TOTAL',    value: String(students.length), color: [92, 168, 255] },
+    { label: 'PRESENT',  value: String(present),         color: [92, 255, 176] },
+    { label: 'ABSENT',   value: String(absent),          color: [255, 92, 138] },
+    { label: 'UNMARKED', value: String(unmarked),        color: [150, 160, 180] },
+    { label: 'RATE',     value: pct + '%',               color: [200, 180, 255] },
+  ];
+ 
+  const gap = 2;
+  const boxW = (pageW - 28 - gap * 4) / 5;
+ 
+  stats.forEach((s, i) => {
+    const x = 14 + i * (boxW + gap);
+    const y = 38;
+    doc.setFillColor(26, 30, 42);
+    doc.roundedRect(x, y, boxW, 20, 2, 2, 'F');
+    doc.setTextColor(...s.color);
+    doc.setFontSize(15);
+    doc.setFont('helvetica', 'bold');
+    doc.text(s.value, x + boxW / 2, y + 11, { align: 'center' });
+    doc.setTextColor(107, 114, 145);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(s.label, x + boxW / 2, y + 17, { align: 'center' });
+  });
+ 
+  // Student table
+  const sorted = [...students].sort((a,b) => a.roll - b.roll);
+ 
+  doc.autoTable({
+    startY: 63,
+    head: [['Roll No.', 'Student Name', 'Status']],
+    body: sorted.map(s => [
+      '#' + String(s.roll).padStart(2,'0'),
+      s.name,
+      s.status === 'present' ? 'Present' : s.status === 'absent' ? 'Absent' : 'Unmarked'
+    ]),
+    theme: 'grid',
+    headStyles: {
+      fillColor: [26, 30, 42],
+      textColor: [107, 114, 145],
+      fontStyle: 'bold',
+      fontSize: 8.5,
+      cellPadding: { top: 5, bottom: 5, left: 6, right: 6 },
+    },
+    bodyStyles: {
+      fillColor: [19, 22, 30],
+      textColor: [232, 234, 240],
+      fontSize: 10,
+      lineColor: [37, 42, 56],
+      lineWidth: 0.25,
+      cellPadding: { top: 4, bottom: 4, left: 6, right: 6 },
+    },
+    alternateRowStyles: { fillColor: [22, 26, 38] },
+    columnStyles: {
+      0: { cellWidth: 30, textColor: [92, 168, 255], fontStyle: 'bold', halign: 'center' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 36, halign: 'center', fontStyle: 'bold' },
+    },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 2) {
+        const v = data.cell.raw;
+        if (v === 'Present')  data.cell.styles.textColor = [92, 255, 176];
+        else if (v === 'Absent') data.cell.styles.textColor = [255, 92, 138];
+        else data.cell.styles.textColor = [107, 114, 145];
+      }
+    },
+    margin: { left: 14, right: 14 },
+  });
+ 
+  // Footer
+  const fy = doc.lastAutoTable.finalY + 8;
+  doc.setDrawColor(37, 42, 56);
+  doc.setLineWidth(0.3);
+  doc.line(14, fy, pageW - 14, fy);
+  doc.setTextColor(107, 114, 145);
+  doc.setFontSize(8);
+  doc.text('Generated by AttendIO', 14, fy + 6);
+  doc.text(new Date().toLocaleString('en-IN'), pageW - 14, fy + 6, { align: 'right' });
+ 
+  doc.save(`attendance_${new Date().toISOString().slice(0,10)}.pdf`);
+  toast('✓ PDF downloaded!', '#5ca8ff');
+}
+ 
+document.getElementById('inp-name').addEventListener('keydown', e => { if(e.key==='Enter') addStudent(); });
+ 
+setDate();
+render();
+updateRollPreview();
+</script>
+</body>
+</html>
