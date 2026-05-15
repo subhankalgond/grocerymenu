@@ -86,7 +86,7 @@ const App = {
         emptyEl.classList.add("hidden");
         footer.classList.remove("hidden");
         itemsEl.innerHTML = data.items.map(i => Components.cartItem(i)).join("");
-        totalEl.textContent = `$${data.total.toFixed(2)}`;
+        totalEl.textContent = `₹${data.total.toFixed(2)}`;
       }
     } catch (e) { console.error(e); }
   },
@@ -137,7 +137,7 @@ const App = {
     const { data } = await API.getCart();
     if (data.items.length === 0) { this.showToast("Cart is empty", "error"); return; }
     document.getElementById("checkout-items").innerHTML = data.items.map(i => Components.checkoutItem(i)).join("");
-    document.getElementById("checkout-total-amount").textContent = `$${data.total.toFixed(2)}`;
+    document.getElementById("checkout-total-amount").textContent = `₹${data.total.toFixed(2)}`;
     document.getElementById("checkout-overlay").classList.add("open");
     document.body.classList.add("no-scroll");
   },
@@ -273,6 +273,88 @@ const App = {
     window.addEventListener("scroll", () => {
       document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
     });
+
+    // Admin panel
+    document.getElementById("admin-btn").addEventListener("click", () => this.openAdmin());
+    document.getElementById("admin-close").addEventListener("click", () => this.closeAdmin());
+    document.getElementById("admin-overlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) this.closeAdmin(); });
+    document.getElementById("add-product-form").addEventListener("submit", (e) => this.adminAddProduct(e));
+
+    // Admin delegated events
+    document.getElementById("admin-products").addEventListener("click", (e) => {
+      const stockBtn = e.target.closest(".admin-stock-btn");
+      if (stockBtn) { this.adminToggleStock(parseInt(stockBtn.dataset.productId)); return; }
+      const delBtn = e.target.closest(".admin-delete-btn");
+      if (delBtn) { this.adminDeleteProduct(parseInt(delBtn.dataset.productId)); return; }
+    });
+    document.getElementById("admin-products").addEventListener("change", (e) => {
+      const priceInput = e.target.closest(".admin-price-input");
+      if (priceInput) { this.adminUpdatePrice(parseInt(priceInput.dataset.productId), parseFloat(priceInput.value)); }
+    });
+  },
+
+  /* ── Admin Panel ────────────────────────── */
+  openAdmin() {
+    document.getElementById("admin-overlay").classList.add("open");
+    document.body.classList.add("no-scroll");
+    this.renderAdminProducts();
+  },
+
+  closeAdmin() {
+    document.getElementById("admin-overlay").classList.remove("open");
+    document.body.classList.remove("no-scroll");
+  },
+
+  renderAdminProducts() {
+    const el = document.getElementById("admin-products");
+    el.innerHTML = PRODUCTS.map(p => Components.adminProductRow(p)).join("");
+  },
+
+  async adminToggleStock(productId) {
+    try {
+      const { data } = await API.toggleStock(productId);
+      this.showToast(`${data.name} is now ${data.inStock ? 'available' : 'unavailable'}`, "info");
+      this.renderAdminProducts();
+      this.loadProducts();
+    } catch (e) { this.showToast(e.message, "error"); }
+  },
+
+  async adminUpdatePrice(productId, newPrice) {
+    try {
+      if (isNaN(newPrice) || newPrice < 0) return;
+      await API.updatePrice(productId, newPrice);
+      this.loadProducts();
+    } catch (e) { this.showToast(e.message, "error"); }
+  },
+
+  async adminDeleteProduct(productId) {
+    try {
+      await API.deleteProduct(productId);
+      this.showToast("Product deleted", "info");
+      this.renderAdminProducts();
+      this.loadProducts();
+      this.refreshCartBadge();
+    } catch (e) { this.showToast(e.message, "error"); }
+  },
+
+  async adminAddProduct(e) {
+    e.preventDefault();
+    try {
+      const product = {
+        name: document.getElementById("ap-name").value,
+        emoji: document.getElementById("ap-emoji").value,
+        category: document.getElementById("ap-category").value,
+        price: document.getElementById("ap-price").value,
+        unit: document.getElementById("ap-unit").value,
+        description: document.getElementById("ap-desc").value,
+      };
+      await API.addProduct(product);
+      document.getElementById("add-product-form").reset();
+      this.showToast("Product added!", "success");
+      this.renderAdminProducts();
+      this.loadProducts();
+      this.loadCategories();
+    } catch (e) { this.showToast(e.message, "error"); }
   },
 };
 

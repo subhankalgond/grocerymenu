@@ -24,7 +24,7 @@ const Components = {
             <span class="card-unit">${product.unit}</span>
           </div>
           <div class="card-footer">
-            <span class="card-price">$${product.price.toFixed(2)}</span>
+            <span class="card-price">₹${product.price.toFixed(2)}</span>
             <button class="btn-add-cart" data-product-id="${product.id}" ${!product.inStock ? "disabled" : ""}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add
@@ -40,14 +40,14 @@ const Components = {
         <span class="cart-item-emoji">${item.product.emoji}</span>
         <div class="cart-item-info">
           <h4>${item.product.name}</h4>
-          <span class="cart-item-price">$${item.product.price.toFixed(2)} × ${item.quantity}</span>
+          <span class="cart-item-price">₹${item.product.price.toFixed(2)} × ${item.quantity}</span>
         </div>
         <div class="cart-item-controls">
           <button class="qty-btn qty-minus" data-product-id="${item.productId}" data-action="decrease">−</button>
           <span class="qty-value">${item.quantity}</span>
           <button class="qty-btn qty-plus" data-product-id="${item.productId}" data-action="increase">+</button>
         </div>
-        <span class="cart-item-subtotal">$${item.subtotal.toFixed(2)}</span>
+        <span class="cart-item-subtotal">₹${item.subtotal.toFixed(2)}</span>
         <button class="cart-item-remove" data-product-id="${item.productId}" title="Remove">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -59,7 +59,7 @@ const Components = {
       <div class="checkout-item">
         <span>${item.product.emoji} ${item.product.name}</span>
         <span>×${item.quantity}</span>
-        <span>$${item.subtotal.toFixed(2)}</span>
+        <span>₹${item.subtotal.toFixed(2)}</span>
       </div>`;
   },
 
@@ -77,7 +77,7 @@ const Components = {
         <div class="order-date">${date}</div>
         <div class="order-items-list">${pills}</div>
         <div class="order-footer">
-          <span class="order-total">Total: <strong>$${order.total.toFixed(2)}</strong></span>
+          <span class="order-total">Total: <strong>₹${order.total.toFixed(2)}</strong></span>
           <span class="order-customer">📍 ${order.customer.name}</span>
         </div>
       </div>`;
@@ -90,5 +90,21 @@ const Components = {
   toast(message, type = "success") {
     const icons = { success: "✅", error: "❌", info: "ℹ️" };
     return `<div class="toast toast-${type}"><span class="toast-icon">${icons[type] || "ℹ️"}</span><span class="toast-msg">${message}</span></div>`;
+  },
+
+  adminProductRow(product) {
+    return `
+      <div class="admin-row" data-product-id="${product.id}">
+        <span class="admin-emoji">${product.emoji}</span>
+        <div class="admin-name">${product.name}</div>
+        <div class="admin-price-wrap">
+          <span>₹</span>
+          <input type="number" class="admin-price-input" data-product-id="${product.id}" value="${product.price.toFixed(2)}" step="0.01" min="0" />
+        </div>
+        <button class="admin-stock-btn ${product.inStock ? 'in-stock' : 'out-stock'}" data-product-id="${product.id}">
+          ${product.inStock ? '✅ Available' : '❌ Unavailable'}
+        </button>
+        <button class="admin-delete-btn" data-product-id="${product.id}" title="Delete">🗑️</button>
+      </div>`;
   },
 };

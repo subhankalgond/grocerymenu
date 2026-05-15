@@ -122,4 +122,46 @@ const API = {
     const orders = this._getOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return { success: true, data: orders };
   },
+
+  /* ── Admin: Product Management ────────────── */
+  async toggleStock(productId) {
+    const p = PRODUCTS.find(p => p.id === parseInt(productId));
+    if (!p) throw new Error("Product not found");
+    p.inStock = !p.inStock;
+    return { success: true, data: p };
+  },
+
+  async updatePrice(productId, newPrice) {
+    const p = PRODUCTS.find(p => p.id === parseInt(productId));
+    if (!p) throw new Error("Product not found");
+    p.price = parseFloat(newPrice);
+    // Also update price in cart if item is there
+    const cart = this._getCart();
+    const cartItem = cart.items.find(i => i.productId === p.id);
+    if (cartItem) { cartItem.product.price = p.price; this._saveCart(cart); }
+    return { success: true, data: p };
+  },
+
+  async deleteProduct(productId) {
+    const idx = PRODUCTS.findIndex(p => p.id === parseInt(productId));
+    if (idx === -1) throw new Error("Product not found");
+    PRODUCTS.splice(idx, 1);
+    // Remove from cart too
+    const cart = this._getCart();
+    cart.items = cart.items.filter(i => i.productId !== parseInt(productId));
+    this._saveCart(cart);
+    return { success: true };
+  },
+
+  async addProduct(product) {
+    const maxId = PRODUCTS.reduce((m, p) => Math.max(m, p.id), 0);
+    product.id = maxId + 1;
+    product.price = parseFloat(product.price);
+    product.rating = parseFloat(product.rating) || 4.5;
+    product.inStock = true;
+    PRODUCTS.push(product);
+    // Add to CATEGORIES if new
+    if (!CATEGORIES.includes(product.category)) CATEGORIES.push(product.category);
+    return { success: true, data: product };
+  },
 };
