@@ -11,7 +11,27 @@ const App = {
     await this.loadCategories();
     await this.loadProducts();
     await this.refreshCartBadge();
+    this.updateAuthUI();
     this.bindEvents();
+  },
+
+  /* ── Auth UI State ──────────────────────── */
+  updateAuthUI() {
+    const loggedIn = Auth.isLoggedIn();
+    const session = Auth.getSession();
+    const adminBtnLabel = document.getElementById("admin-btn-label");
+    const signoutBtn = document.getElementById("signout-btn");
+    const adminBtn = document.getElementById("admin-btn");
+
+    if (loggedIn && session) {
+      adminBtnLabel.textContent = session.name.split(" ")[0];
+      adminBtn.classList.add("admin-logged-in");
+      signoutBtn.classList.remove("hidden");
+    } else {
+      adminBtnLabel.textContent = "Admin";
+      adminBtn.classList.remove("admin-logged-in");
+      signoutBtn.classList.add("hidden");
+    }
   },
 
   /* ── Data Loading ──────────────────────── */
@@ -274,8 +294,11 @@ const App = {
       document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 50);
     });
 
-    // Admin panel
-    document.getElementById("admin-btn").addEventListener("click", () => this.openAdmin());
+    // Admin panel (gated behind auth)
+    document.getElementById("admin-btn").addEventListener("click", () => {
+      if (Auth.isLoggedIn()) { this.openAdmin(); }
+      else { this.openAuth(); }
+    });
     document.getElementById("admin-close").addEventListener("click", () => this.closeAdmin());
     document.getElementById("admin-overlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) this.closeAdmin(); });
     document.getElementById("add-product-form").addEventListener("submit", (e) => this.adminAddProduct(e));
@@ -291,10 +314,120 @@ const App = {
       const priceInput = e.target.closest(".admin-price-input");
       if (priceInput) { this.adminUpdatePrice(parseInt(priceInput.dataset.productId), parseFloat(priceInput.value)); }
     });
+
+    // Sign Out
+    document.getElementById("signout-btn").addEventListener("click", () => this.handleSignOut());
+
+    // Auth modal
+    document.getElementById("auth-close").addEventListener("click", () => this.closeAuth());
+    document.getElementById("auth-overlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) this.closeAuth(); });
+    document.getElementById("signin-form").addEventListener("submit", (e) => this.handleSignIn(e));
+    document.getElementById("signup-form").addEventListener("submit", (e) => this.handleSignUp(e));
+    document.getElementById("show-signup").addEventListener("click", () => this.showAuthForm("signup"));
+    document.getElementById("show-signin").addEventListener("click", () => this.showAuthForm("signin"));
+
+    // Password toggles
+    document.querySelectorAll(".password-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        input.type = input.type === "password" ? "text" : "password";
+        btn.classList.toggle("showing");
+      });
+    });
+  },
+
+  /* ── Auth Modal ────────────────────────── */
+  openAuth() {
+    this.showAuthForm("signin");
+    document.getElementById("auth-overlay").classList.add("open");
+    document.body.classList.add("no-scroll");
+    document.getElementById("auth-error").classList.add("hidden");
+  },
+
+  closeAuth() {
+    document.getElementById("auth-overlay").classList.remove("open");
+    document.body.classList.remove("no-scroll");
+    document.getElementById("signin-form").reset();
+    document.getElementById("signup-form").reset();
+    document.getElementById("auth-error").classList.add("hidden");
+  },
+
+  showAuthForm(which) {
+    const signinForm = document.getElementById("signin-form");
+    const signupForm = document.getElementById("signup-form");
+    const title = document.getElementById("auth-modal-title");
+    document.getElementById("auth-error").classList.add("hidden");
+
+    if (which === "signup") {
+      signinForm.classList.add("hidden");
+      signupForm.classList.remove("hidden");
+      title.textContent = "✨ Admin Sign Up";
+    } else {
+      signupForm.classList.add("hidden");
+      signinForm.classList.remove("hidden");
+      title.textContent = "🔐 Admin Sign In";
+    }
+  },
+
+  showAuthError(msg) {
+    const el = document.getElementById("auth-error");
+    document.getElementById("auth-error-msg").textContent = msg;
+    el.classList.remove("hidden");
+    el.classList.add("shake");
+    setTimeout(() => el.classList.remove("shake"), 500);
+  },
+
+  handleSignIn(e) {
+    e.preventDefault();
+    try {
+      const email = document.getElementById("signin-email").value;
+      const password = document.getElementById("signin-password").value;
+      const admin = Auth.signIn(email, password);
+      this.closeAuth();
+      this.updateAuthUI();
+      this.showToast(`Welcome back, ${admin.name}!`, "success");
+      // Auto-open admin panel after successful login
+      setTimeout(() => this.openAdmin(), 400);
+    } catch (err) {
+      this.showAuthError(err.message);
+    }
+  },
+
+  handleSignUp(e) {
+    e.preventDefault();
+    try {
+      const name = document.getElementById("signup-name").value;
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+      const confirm = document.getElementById("signup-confirm").value;
+
+      if (password !== confirm) {
+        throw new Error("Passwords do not match");
+      }
+
+      const admin = Auth.signUp(name, email, password);
+      this.closeAuth();
+      this.updateAuthUI();
+      this.showToast(`Welcome, ${admin.name}! Account created.`, "success");
+      // Auto-open admin panel after successful signup
+      setTimeout(() => this.openAdmin(), 400);
+    } catch (err) {
+      this.showAuthError(err.message);
+    }
+  },
+
+  handleSignOut() {
+    Auth.signOut();
+    this.updateAuthUI();
+    this.showToast("Signed out successfully", "info");
   },
 
   /* ── Admin Panel ────────────────────────── */
   openAdmin() {
+    if (!Auth.isLoggedIn()) {
+      this.openAuth();
+      return;
+    }
     document.getElementById("admin-overlay").classList.add("open");
     document.body.classList.add("no-scroll");
     this.renderAdminProducts();
