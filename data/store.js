@@ -46,9 +46,13 @@ let cart = { items: [] };
 let orders = [];
 let nextOrderId = 1001;
 
+// In-memory admin accounts (shared across all clients)
+let admins = [];
+
 module.exports = {
   products,
   cart,
   orders,
+  admins,
   getNextOrderId: () => nextOrderId++,
 };

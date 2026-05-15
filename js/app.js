@@ -342,6 +342,13 @@ const App = {
     document.getElementById("auth-overlay").classList.add("open");
     document.body.classList.add("no-scroll");
     document.getElementById("auth-error").classList.add("hidden");
+
+    // Pre-fill saved credentials if available
+    const saved = Auth.getSavedCredentials();
+    if (saved) {
+      document.getElementById("signin-email").value = saved.email || "";
+      document.getElementById("signin-password").value = saved.password || "";
+    }
   },
 
   closeAuth() {
@@ -377,12 +384,12 @@ const App = {
     setTimeout(() => el.classList.remove("shake"), 500);
   },
 
-  handleSignIn(e) {
+  async handleSignIn(e) {
     e.preventDefault();
     try {
       const email = document.getElementById("signin-email").value;
       const password = document.getElementById("signin-password").value;
-      const admin = Auth.signIn(email, password);
+      const admin = await Auth.signIn(email, password);
       this.closeAuth();
       this.updateAuthUI();
       this.showToast(`Welcome back, ${admin.name}!`, "success");
@@ -393,7 +400,7 @@ const App = {
     }
   },
 
-  handleSignUp(e) {
+  async handleSignUp(e) {
     e.preventDefault();
     try {
       const name = document.getElementById("signup-name").value;
@@ -405,7 +412,7 @@ const App = {
         throw new Error("Passwords do not match");
       }
 
-      const admin = Auth.signUp(name, email, password);
+      const admin = await Auth.signUp(name, email, password);
       this.closeAuth();
       this.updateAuthUI();
       this.showToast(`Welcome, ${admin.name}! Account created.`, "success");
