@@ -67,13 +67,12 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Auto-increment orderId
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save", async function () {
   if (!this.orderId) {
     const lastOrder = await this.constructor
       .findOne({}, {}, { sort: { orderId: -1 } });
     this.orderId = lastOrder ? lastOrder.orderId + 1 : 1001;
   }
-  next();
 });
 
 module.exports = mongoose.model("Order", orderSchema);
