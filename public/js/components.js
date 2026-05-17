@@ -1,6 +1,5 @@
 /* ─────────────────────────────────────────────
    FreshCart — UI Component Renderers
-   Agent 3: Frontend Engineer
    ───────────────────────────────────────────── */
 
 const Components = {
@@ -8,9 +7,10 @@ const Components = {
     const stockClass = product.inStock ? "" : "out-of-stock";
     const stockBadge = product.inStock ? "" : '<span class="stock-badge">Out of Stock</span>';
     const stars = "★".repeat(Math.floor(product.rating)) + "☆".repeat(5 - Math.floor(product.rating));
+    const id = product._id || product.id;
 
     return `
-      <article class="product-card ${stockClass}" data-product-id="${product.id}">
+      <article class="product-card ${stockClass}" data-product-id="${id}">
         <div class="card-visual">
           <span class="card-emoji">${product.emoji}</span>
           <span class="card-category">${product.category}</span>
@@ -24,8 +24,8 @@ const Components = {
             <span class="card-unit">${product.unit}</span>
           </div>
           <div class="card-footer">
-            <span class="card-price">₹${product.price.toFixed(2)}</span>
-            <button class="btn-add-cart" data-product-id="${product.id}" ${!product.inStock ? "disabled" : ""}>
+            <span class="card-price">₹${product.price}</span>
+            <button class="btn-add-cart" data-product-id="${id}" ${!product.inStock ? "disabled" : ""}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add
             </button>
@@ -37,10 +37,10 @@ const Components = {
   cartItem(item) {
     return `
       <div class="cart-item" data-product-id="${item.productId}">
-        <span class="cart-item-emoji">${item.product.emoji}</span>
+        <span class="cart-item-emoji">${item.emoji}</span>
         <div class="cart-item-info">
-          <h4>${item.product.name}</h4>
-          <span class="cart-item-price">₹${item.product.price.toFixed(2)} × ${item.quantity}</span>
+          <h4>${item.name}</h4>
+          <span class="cart-item-price">₹${item.price} × ${item.quantity}</span>
         </div>
         <div class="cart-item-controls">
           <button class="qty-btn qty-minus" data-product-id="${item.productId}" data-action="decrease">−</button>
@@ -57,29 +57,9 @@ const Components = {
   checkoutItem(item) {
     return `
       <div class="checkout-item">
-        <span>${item.product.emoji} ${item.product.name}</span>
+        <span>${item.emoji} ${item.name}</span>
         <span>×${item.quantity}</span>
         <span>₹${item.subtotal.toFixed(2)}</span>
-      </div>`;
-  },
-
-  orderCard(order) {
-    const date = new Date(order.createdAt).toLocaleDateString("en-US", {
-      year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-    });
-    const pills = order.items.map(i => `<span class="order-item-pill">${i.emoji} ${i.name} ×${i.quantity}</span>`).join("");
-    return `
-      <div class="order-card">
-        <div class="order-header">
-          <span class="order-id">Order #${order.id}</span>
-          <span class="order-status status-${order.status}">${order.status}</span>
-        </div>
-        <div class="order-date">${date}</div>
-        <div class="order-items-list">${pills}</div>
-        <div class="order-footer">
-          <span class="order-total">Total: <strong>₹${order.total.toFixed(2)}</strong></span>
-          <span class="order-customer">📍 ${order.customer.name}</span>
-        </div>
       </div>`;
   },
 
@@ -92,19 +72,19 @@ const Components = {
     return `<div class="toast toast-${type}"><span class="toast-icon">${icons[type] || "ℹ️"}</span><span class="toast-msg">${message}</span></div>`;
   },
 
-  adminProductRow(product) {
+  loadingCard() {
     return `
-      <div class="admin-row" data-product-id="${product.id}">
-        <span class="admin-emoji">${product.emoji}</span>
-        <div class="admin-name">${product.name}</div>
-        <div class="admin-price-wrap">
-          <span>₹</span>
-          <input type="number" class="admin-price-input" data-product-id="${product.id}" value="${product.price.toFixed(2)}" step="0.01" min="0" />
+      <article class="product-card skeleton-card">
+        <div class="card-visual skeleton-shimmer"></div>
+        <div class="card-body">
+          <div class="skeleton-line skeleton-shimmer" style="width:70%;height:16px;margin-bottom:8px"></div>
+          <div class="skeleton-line skeleton-shimmer" style="width:100%;height:12px;margin-bottom:6px"></div>
+          <div class="skeleton-line skeleton-shimmer" style="width:60%;height:12px;margin-bottom:16px"></div>
+          <div class="card-footer">
+            <div class="skeleton-line skeleton-shimmer" style="width:50px;height:20px"></div>
+            <div class="skeleton-line skeleton-shimmer" style="width:70px;height:32px;border-radius:50px"></div>
+          </div>
         </div>
-        <button class="admin-stock-btn ${product.inStock ? 'in-stock' : 'out-stock'}" data-product-id="${product.id}">
-          ${product.inStock ? '✅ Available' : '❌ Unavailable'}
-        </button>
-        <button class="admin-delete-btn" data-product-id="${product.id}" title="Delete">🗑️</button>
-      </div>`;
+      </article>`;
   },
 };

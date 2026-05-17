@@ -1,167 +1,156 @@
 /* ─────────────────────────────────────────────
-   FreshCart — localStorage-based API layer
-   (Static version for GitHub Pages — no backend)
+   FreshCart — API Layer
+   Connects to Express + MongoDB backend
+   Cart uses localStorage for persistence
    ───────────────────────────────────────────── */
 
 const API = {
-  /* ── helpers ─────────────────────────────── */
-  _cartKey: "freshcart_cart",
-  _ordersKey: "freshcart_orders",
-  _orderIdKey: "freshcart_nextOrderId",
+  BASE: "",
 
-  _getCart()   { return JSON.parse(localStorage.getItem(this._cartKey) || '{"items":[]}'); },
-  _saveCart(c) { localStorage.setItem(this._cartKey, JSON.stringify(c)); },
-
-  _getOrders()   { return JSON.parse(localStorage.getItem(this._ordersKey) || "[]"); },
-  _saveOrders(o) { localStorage.setItem(this._ordersKey, JSON.stringify(o)); },
-
-  _nextOrderId() {
-    let id = parseInt(localStorage.getItem(this._orderIdKey) || "1001");
-    localStorage.setItem(this._orderIdKey, String(id + 1));
-    return id;
+  /* ── Helper: fetch wrapper ────────────────── */
+  async _fetch(url, options = {}) {
+    try {
+      const res = await fetch(this.BASE + url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Request failed");
+      return data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  /* ── Products (from embedded PRODUCTS array) ── */
+  /* ── Products (from MongoDB via API) ──────── */
   async getProducts(category = "All", search = "") {
-    let result = [...PRODUCTS];
-    if (category && category !== "All") {
-      result = result.filter(p => p.category.toLowerCase() === category.toLowerCase());
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
-    }
-    return { success: true, data: result, total: result.length };
+    let url = "/api/products?";
+    if (category && category !== "All") url += `category=${encodeURIComponent(category)}&`;
+    if (search) url += `search=${encodeURIComponent(search)}`;
+    return this._fetch(url);
   },
 
   async getCategories() {
-    return { success: true, data: CATEGORIES };
+    return this._fetch("/api/products/categories");
   },
 
-  /* ── Cart (localStorage) ─────────────────── */
+  /* ── Cart (localStorage for persistence) ──── */
+  _cartKey: "freshcart_cart",
+
+  _getCartData() {
+    return JSON.parse(localStorage.getItem(this._cartKey) || '{"items":[]}');
+  },
+
+  _saveCartData(cart) {
+    localStorage.setItem(this._cartKey, JSON.stringify(cart));
+  },
+
   async getCart() {
-    const cart = this._getCart();
-    const items = cart.items.map(item => ({
+    const cart = this._getCartData();
+    const items = cart.items.map((item) => ({
       ...item,
-      subtotal: +(item.product.price * item.quantity).toFixed(2),
+      subtotal: +(item.price * item.quantity).toFixed(2),
     }));
     const total = +items.reduce((s, i) => s + i.subtotal, 0).toFixed(2);
     const count = items.reduce((s, i) => s + i.quantity, 0);
     return { success: true, data: { items, total, count } };
   },
 
-  async addToCart(productId, quantity = 1) {
-    const product = PRODUCTS.find(p => p.id === parseInt(productId));
-    if (!product) throw new Error("Product not found");
-    if (!product.inStock) throw new Error("Product is out of stock");
-
-    const cart = this._getCart();
-    const existing = cart.items.find(i => i.productId === product.id);
-    if (existing) { existing.quantity += quantity; }
-    else { cart.items.push({ productId: product.id, quantity, product }); }
-    this._saveCart(cart);
-    return { success: true, message: "Item added to cart", data: cart };
+  async addToCart(product) {
+    const cart = this._getCartData();
+    const existing = cart.items.find((i) => i.productId === product._id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.items.push({
+        productId: product._id,
+        name: product.name,
+        emoji: product.emoji,
+        price: product.price,
+        unit: product.unit,
+        quantity: 1,
+      });
+    }
+    this._saveCartData(cart);
+    return { success: true, message: "Item added to cart" };
   },
 
-  async updateCartItem(productId, quantity) {
-    const cart = this._getCart();
-    const item = cart.items.find(i => i.productId === parseInt(productId));
+  async updateCartQty(productId, quantity) {
+    const cart = this._getCartData();
+    const item = cart.items.find((i) => i.productId === productId);
     if (!item) throw new Error("Item not in cart");
-    item.quantity = quantity;
-    this._saveCart(cart);
-    return { success: true, message: "Quantity updated", data: cart };
+    if (quantity < 1) {
+      cart.items = cart.items.filter((i) => i.productId !== productId);
+    } else {
+      item.quantity = quantity;
+    }
+    this._saveCartData(cart);
+    return { success: true, message: "Cart updated" };
   },
 
   async removeFromCart(productId) {
-    const cart = this._getCart();
-    cart.items = cart.items.filter(i => i.productId !== parseInt(productId));
-    this._saveCart(cart);
-    return { success: true, message: "Item removed from cart" };
+    const cart = this._getCartData();
+    cart.items = cart.items.filter((i) => i.productId !== productId);
+    this._saveCartData(cart);
+    return { success: true, message: "Item removed" };
   },
 
   async clearCart() {
-    this._saveCart({ items: [] });
+    this._saveCartData({ items: [] });
     return { success: true, message: "Cart cleared" };
   },
 
-  /* ── Orders (localStorage) ──────────────── */
-  async placeOrder(customer) {
-    const cart = this._getCart();
+  /* ── Orders (via API to MongoDB) ──────────── */
+  async placeOrder(customer, paymentMethod) {
+    const cart = this._getCartData();
     if (cart.items.length === 0) throw new Error("Cart is empty");
-    if (!customer.name || !customer.email || !customer.address) {
-      throw new Error("name, email, and address are required");
+
+    const result = await this._fetch("/api/orders", {
+      method: "POST",
+      body: JSON.stringify({
+        items: cart.items,
+        customer,
+        paymentMethod,
+      }),
+    });
+
+    // Clear cart after successful order
+    this._saveCartData({ items: [] });
+    return result;
+  },
+
+  /* ── WhatsApp Message Generator ────────────── */
+  generateWhatsAppMessage(cart, customer = null) {
+    let msg = "🛒 *FreshCart Order*\n\n";
+    msg += "━━━━━━━━━━━━━━━━━\n";
+
+    cart.items.forEach((item) => {
+      msg += `${item.emoji} ${item.name}\n`;
+      msg += `   ₹${item.price} × ${item.quantity} = ₹${(item.price * item.quantity).toFixed(2)}\n`;
+    });
+
+    msg += "━━━━━━━━━━━━━━━━━\n";
+    msg += `💰 *Total: ₹${cart.total.toFixed(2)}*\n\n`;
+
+    if (customer) {
+      msg += "👤 *Customer Details:*\n";
+      msg += `Name: ${customer.name}\n`;
+      msg += `Phone: ${customer.phone}\n`;
+      msg += `Address: ${customer.address}\n`;
     }
 
-    const items = cart.items.map(item => ({
-      productId: item.productId,
-      name: item.product.name,
-      emoji: item.product.emoji,
-      price: item.product.price,
-      unit: item.product.unit,
-      quantity: item.quantity,
-      subtotal: +(item.product.price * item.quantity).toFixed(2),
-    }));
-    const total = +items.reduce((s, i) => s + i.subtotal, 0).toFixed(2);
-
-    const order = {
-      id: this._nextOrderId(),
-      items, total,
-      status: "confirmed",
-      createdAt: new Date().toISOString(),
-      customer: { name: customer.name, email: customer.email, phone: customer.phone || "", address: customer.address },
-    };
-
-    const orders = this._getOrders();
-    orders.push(order);
-    this._saveOrders(orders);
-    this._saveCart({ items: [] });
-    return { success: true, message: "Order placed!", data: order };
+    msg += "\n🙏 Please confirm my order!";
+    return encodeURIComponent(msg);
   },
 
-  async getOrders() {
-    const orders = this._getOrders().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    return { success: true, data: orders };
-  },
-
-  /* ── Admin: Product Management ────────────── */
-  async toggleStock(productId) {
-    const p = PRODUCTS.find(p => p.id === parseInt(productId));
-    if (!p) throw new Error("Product not found");
-    p.inStock = !p.inStock;
-    return { success: true, data: p };
-  },
-
-  async updatePrice(productId, newPrice) {
-    const p = PRODUCTS.find(p => p.id === parseInt(productId));
-    if (!p) throw new Error("Product not found");
-    p.price = parseFloat(newPrice);
-    // Also update price in cart if item is there
-    const cart = this._getCart();
-    const cartItem = cart.items.find(i => i.productId === p.id);
-    if (cartItem) { cartItem.product.price = p.price; this._saveCart(cart); }
-    return { success: true, data: p };
-  },
-
-  async deleteProduct(productId) {
-    const idx = PRODUCTS.findIndex(p => p.id === parseInt(productId));
-    if (idx === -1) throw new Error("Product not found");
-    PRODUCTS.splice(idx, 1);
-    // Remove from cart too
-    const cart = this._getCart();
-    cart.items = cart.items.filter(i => i.productId !== parseInt(productId));
-    this._saveCart(cart);
-    return { success: true };
-  },
-
-  async addProduct(product) {
-    const maxId = PRODUCTS.reduce((m, p) => Math.max(m, p.id), 0);
-    product.id = maxId + 1;
-    product.price = parseFloat(product.price);
-    product.rating = parseFloat(product.rating) || 4.5;
-    product.inStock = true;
-    PRODUCTS.push(product);
-    // Add to CATEGORIES if new
-    if (!CATEGORIES.includes(product.category)) CATEGORIES.push(product.category);
-    return { success: true, data: product };
+  openWhatsApp(cart, customer = null) {
+    const msg = this.generateWhatsAppMessage(cart, customer);
+    // Default WhatsApp number (owner can update in .env)
+    const phone = "919876543210";
+    const url = `https://wa.me/${phone}?text=${msg}`;
+    window.open(url, "_blank");
   },
 };

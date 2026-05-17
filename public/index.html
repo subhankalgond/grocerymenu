@@ -15,7 +15,7 @@
   <!-- ─── NAVBAR ─────────────────────────────── -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
-      <a href="#" class="nav-logo" id="nav-logo">
+      <a href="/" class="nav-logo" id="nav-logo">
         <span class="logo-icon">🛒</span>
         <span class="logo-text">Fresh<span class="logo-accent">Cart</span></span>
       </a>
@@ -26,18 +26,10 @@
       </div>
 
       <div class="nav-actions">
-        <button class="nav-btn admin-btn" id="admin-btn" title="Admin Panel">
+        <a href="/admin" class="nav-btn admin-btn" id="admin-btn" title="Admin Dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span class="btn-label" id="admin-btn-label">Admin</span>
-        </button>
-        <button class="nav-btn signout-btn hidden" id="signout-btn" title="Sign Out">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          <span class="btn-label">Sign Out</span>
-        </button>
-        <button class="nav-btn orders-btn" id="orders-btn" title="My Orders">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-          <span class="btn-label">Orders</span>
-        </button>
+          <span class="btn-label">Admin</span>
+        </a>
         <button class="nav-btn cart-btn" id="cart-btn" title="Shopping Cart">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-badge" id="cart-badge">0</span>
@@ -77,6 +69,12 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div class="loading-state" id="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading fresh groceries...</p>
+    </div>
+
     <!-- Products Grid -->
     <section class="products-section">
       <div class="section-header">
@@ -98,7 +96,7 @@
   <div class="cart-overlay" id="cart-overlay"></div>
   <aside class="cart-drawer" id="cart-drawer">
     <div class="cart-header">
-      <h2>Your Cart</h2>
+      <h2>🛒 Your Cart</h2>
       <button class="cart-close" id="cart-close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -115,14 +113,18 @@
       </div>
     </div>
 
-    <div class="cart-footer" id="cart-footer">
+    <div class="cart-footer hidden" id="cart-footer">
       <div class="cart-total">
         <span>Total</span>
-        <span class="total-amount" id="cart-total">₹0.00</span>
+        <span class="total-amount" id="cart-total">₹0</span>
       </div>
       <button class="btn-checkout" id="checkout-btn">
         Proceed to Checkout
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <button class="btn-whatsapp" id="whatsapp-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Order via WhatsApp
       </button>
       <button class="btn-clear-cart" id="clear-cart-btn">Clear Cart</button>
     </div>
@@ -130,9 +132,9 @@
 
   <!-- ─── CHECKOUT MODAL ─────────────────────── -->
   <div class="modal-overlay" id="checkout-overlay">
-    <div class="modal" id="checkout-modal">
+    <div class="modal checkout-modal-wide" id="checkout-modal">
       <div class="modal-header">
-        <h2>Checkout</h2>
+        <h2>🛍️ Checkout</h2>
         <button class="modal-close" id="checkout-close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -144,7 +146,7 @@
           <div class="checkout-items" id="checkout-items"></div>
           <div class="checkout-total">
             <span>Total</span>
-            <span id="checkout-total-amount">₹0.00</span>
+            <span id="checkout-total-amount">₹0</span>
           </div>
         </div>
 
@@ -152,19 +154,53 @@
           <h3>👤 Your Details</h3>
           <div class="form-group">
             <label for="checkout-name">Full Name *</label>
-            <input type="text" id="checkout-name" required placeholder="John Doe" />
+            <input type="text" id="checkout-name" required placeholder="Enter your name" minlength="2" />
           </div>
-          <div class="form-group">
-            <label for="checkout-email">Email *</label>
-            <input type="email" id="checkout-email" required placeholder="john@example.com" />
-          </div>
-          <div class="form-group">
-            <label for="checkout-phone">Phone</label>
-            <input type="tel" id="checkout-phone" placeholder="+1 (555) 123-4567" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkout-phone">Phone Number *</label>
+              <input type="tel" id="checkout-phone" required placeholder="+91 98765 43210" pattern="[0-9+\s-]{10,15}" />
+            </div>
+            <div class="form-group">
+              <label for="checkout-email">Email (optional)</label>
+              <input type="email" id="checkout-email" placeholder="john@example.com" />
+            </div>
           </div>
           <div class="form-group">
             <label for="checkout-address">Delivery Address *</label>
-            <textarea id="checkout-address" required placeholder="123 Main St, Apt 4, City, State ZIP" rows="3"></textarea>
+            <textarea id="checkout-address" required placeholder="House/Flat No, Street, Landmark, City, PIN Code" rows="3" minlength="10"></textarea>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>💳 Payment Method</h3>
+          <div class="payment-options" id="payment-options">
+            <label class="payment-option active" id="payment-cod">
+              <input type="radio" name="payment" value="cod" checked />
+              <div class="payment-card">
+                <span class="payment-icon">💵</span>
+                <div class="payment-info">
+                  <strong>Cash on Delivery</strong>
+                  <small>Pay when your order arrives</small>
+                </div>
+                <span class="payment-check">✓</span>
+              </div>
+            </label>
+            <label class="payment-option" id="payment-online">
+              <input type="radio" name="payment" value="online" />
+              <div class="payment-card">
+                <span class="payment-icon">📱</span>
+                <div class="payment-info">
+                  <strong>Online Payment</strong>
+                  <small>UPI / Card / Net Banking</small>
+                </div>
+                <span class="payment-check">✓</span>
+              </div>
+            </label>
+          </div>
+          <div class="online-payment-notice hidden" id="online-payment-notice">
+            <div class="notice-icon">ℹ️</div>
+            <p>Online payment integration coming soon. Your order will be placed as Cash on Delivery for now.</p>
           </div>
         </div>
 
@@ -182,154 +218,16 @@
   <div class="modal-overlay" id="confirmation-overlay">
     <div class="modal confirmation-modal" id="confirmation-modal">
       <div class="confirmation-content">
-        <div class="confirmation-icon">✅</div>
-        <h2>Order Placed!</h2>
+        <div class="confirmation-icon">🎉</div>
+        <h2>Order Placed Successfully!</h2>
         <p class="confirmation-id" id="confirmation-order-id">Order #0000</p>
-        <p class="confirmation-msg">Your groceries are on their way. We'll send a confirmation to your email.</p>
-        <button class="btn-primary" id="confirmation-close">Continue Shopping</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── ORDERS MODAL ──────────────────────── -->
-  <div class="modal-overlay" id="orders-overlay">
-    <div class="modal orders-modal" id="orders-modal">
-      <div class="modal-header">
-        <h2>📋 My Orders</h2>
-        <button class="modal-close" id="orders-close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="orders-list" id="orders-list">
-        <div class="orders-empty" id="orders-empty">
-          <div class="empty-icon">📦</div>
-          <h3>No orders yet</h3>
-          <p>Your order history will appear here</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── ADMIN PANEL MODAL ──────────────── -->
-  <div class="modal-overlay" id="admin-overlay">
-    <div class="modal admin-modal" id="admin-modal">
-      <div class="modal-header">
-        <h2>⚙️ Admin Panel</h2>
-        <button class="modal-close" id="admin-close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="admin-body">
-        <div class="admin-add-section">
-          <h3>➕ Add New Product</h3>
-          <form id="add-product-form" class="admin-add-form">
-            <input type="text" id="ap-name" placeholder="Product name" required />
-            <input type="text" id="ap-emoji" placeholder="Emoji (e.g. 🍕)" required />
-            <select id="ap-category" required>
-              <option value="">Category</option>
-              <option value="Fruits">Fruits</option>
-              <option value="Vegetables">Vegetables</option>
-              <option value="Dairy">Dairy</option>
-              <option value="Bakery">Bakery</option>
-              <option value="Beverages">Beverages</option>
-              <option value="Snacks">Snacks</option>
-            </select>
-            <input type="number" id="ap-price" placeholder="Price (₹)" step="0.01" min="0" required />
-            <input type="text" id="ap-unit" placeholder="Unit (e.g. 1 kg)" required />
-            <input type="text" id="ap-desc" placeholder="Description" required />
-            <button type="submit" class="btn-add-product">+ Add Product</button>
-          </form>
-        </div>
-        <div class="admin-list-section">
-          <h3>📦 Manage Products</h3>
-          <div class="admin-products" id="admin-products"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─── ADMIN AUTH MODAL ─────────────────── -->
-  <div class="modal-overlay" id="auth-overlay">
-    <div class="modal auth-modal" id="auth-modal">
-      <div class="modal-header">
-        <h2 id="auth-modal-title">🔐 Admin Sign In</h2>
-        <button class="modal-close" id="auth-close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="auth-body">
-        <!-- Sign In Form -->
-        <form id="signin-form" class="auth-form">
-          <div class="auth-welcome">
-            <div class="auth-avatar">🛡️</div>
-            <p>Sign in to access the admin panel</p>
-          </div>
-          <div class="form-group">
-            <label for="signin-email">Email</label>
-            <input type="email" id="signin-email" required placeholder="admin@freshcart.com" />
-          </div>
-          <div class="form-group">
-            <label for="signin-password">Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="signin-password" required placeholder="Enter your password" />
-              <button type="button" class="password-toggle" data-target="signin-password" title="Toggle password">
-                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="btn-auth-submit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Sign In
+        <p class="confirmation-msg">Your groceries are on their way! The store owner has been notified.</p>
+        <div class="confirmation-actions">
+          <button class="btn-primary" id="confirmation-close">Continue Shopping</button>
+          <button class="btn-whatsapp-confirm" id="confirmation-whatsapp">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Share on WhatsApp
           </button>
-          <div class="auth-switch">
-            Don't have an admin account? <button type="button" id="show-signup">Sign Up</button>
-          </div>
-        </form>
-
-        <!-- Sign Up Form -->
-        <form id="signup-form" class="auth-form hidden">
-          <div class="auth-welcome">
-            <div class="auth-avatar">✨</div>
-            <p>Create a new admin account</p>
-          </div>
-          <div class="form-group">
-            <label for="signup-name">Full Name</label>
-            <input type="text" id="signup-name" required placeholder="John Doe" />
-          </div>
-          <div class="form-group">
-            <label for="signup-email">Email</label>
-            <input type="email" id="signup-email" required placeholder="admin@freshcart.com" />
-          </div>
-          <div class="form-group">
-            <label for="signup-password">Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="signup-password" required placeholder="Min 6 characters" minlength="6" />
-              <button type="button" class="password-toggle" data-target="signup-password" title="Toggle password">
-                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="signup-confirm">Confirm Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="signup-confirm" required placeholder="Re-enter password" minlength="6" />
-              <button type="button" class="password-toggle" data-target="signup-confirm" title="Toggle password">
-                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <button type="submit" class="btn-auth-submit btn-signup">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            Create Account
-          </button>
-          <div class="auth-switch">
-            Already have an account? <button type="button" id="show-signin">Sign In</button>
-          </div>
-        </form>
-
-        <div class="auth-error hidden" id="auth-error">
-          <span class="auth-error-icon">⚠️</span>
-          <span class="auth-error-msg" id="auth-error-msg"></span>
         </div>
       </div>
     </div>
@@ -339,10 +237,9 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ─── SCRIPTS ────────────────────────────── -->
-  <script src="js/data.js"></script>
-  <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/components.js"></script>
   <script src="js/app.js"></script>
+
 </body>
 </html>

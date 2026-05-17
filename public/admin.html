@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FreshCart — Admin Dashboard</title>
+  <meta name="description" content="FreshCart admin dashboard — manage orders, products, and track business performance." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-page">
+
+  <!-- ─── AUTH GATE ───────────────────────────── -->
+  <div class="auth-gate" id="auth-gate">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header-block">
+          <div class="auth-logo">
+            <span class="logo-icon">🛒</span>
+            <span class="logo-text">Fresh<span class="logo-accent">Cart</span></span>
+          </div>
+          <h1 id="auth-title">Admin Sign In</h1>
+          <p class="auth-subtitle" id="auth-subtitle">Sign in to manage your store</p>
+        </div>
+
+        <form class="auth-form" id="auth-form">
+          <div class="form-group hidden" id="auth-name-group">
+            <label for="auth-name">Full Name</label>
+            <input type="text" id="auth-name" placeholder="Your name" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="auth-email">Email Address</label>
+            <input type="email" id="auth-email" placeholder="admin@freshcart.com" autocomplete="email" required />
+          </div>
+          <div class="form-group">
+            <label for="auth-password">Password</label>
+            <div class="password-wrapper">
+              <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+              <button type="button" class="password-toggle" id="password-toggle" title="Show password">
+                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-auth-submit" id="auth-submit-btn">
+            <span id="auth-submit-text">Sign In</span>
+            <span class="btn-spinner hidden" id="auth-spinner">
+              <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="30 70"/></svg>
+            </span>
+          </button>
+
+          <div class="auth-error hidden" id="auth-error">
+            <span class="auth-error-icon">⚠️</span>
+            <span id="auth-error-text"></span>
+          </div>
+        </form>
+
+        <div class="auth-switch">
+          <span id="auth-switch-text">Don't have an account?</span>
+          <button id="auth-switch-btn">Create Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── ADMIN DASHBOARD ────────────────────── -->
+  <div class="admin-dashboard hidden" id="admin-dashboard">
+
+    <!-- ─── Top Bar ──────────────────────────── -->
+    <header class="admin-topbar" id="admin-topbar">
+      <div class="topbar-inner">
+        <div class="topbar-left">
+          <a href="/" class="topbar-logo" title="Back to Store">
+            <span class="logo-icon">🛒</span>
+            <span class="logo-text">Fresh<span class="logo-accent">Cart</span></span>
+          </a>
+          <span class="topbar-divider"></span>
+          <h1 class="topbar-title">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-admin-info">
+            <span class="admin-avatar" id="admin-avatar">👤</span>
+            <span class="admin-name" id="admin-name-display">Admin</span>
+          </div>
+          <button class="topbar-btn signout-topbar" id="signout-btn" title="Sign Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span class="btn-label">Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── Stats Cards ──────────────────────── -->
+    <main class="admin-main">
+      <section class="stats-grid" id="stats-grid">
+        <div class="stat-card stat-total">
+          <div class="stat-icon">📦</div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-total-orders">0</span>
+            <span class="stat-label">Total Orders</span>
+          </div>
+        </div>
+        <div class="stat-card stat-pending">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-pending">0</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+        <div class="stat-card stat-accepted">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-accepted">0</span>
+            <span class="stat-label">Accepted</span>
+          </div>
+        </div>
+        <div class="stat-card stat-delivered">
+          <div class="stat-icon">🚚</div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-delivered">0</span>
+            <span class="stat-label">Delivered</span>
+          </div>
+        </div>
+        <div class="stat-card stat-revenue">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <span class="stat-value" id="stat-revenue">₹0</span>
+            <span class="stat-label">Total Revenue</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Tab Navigation ─────────────────── -->
+      <div class="admin-tabs" id="admin-tabs">
+        <button class="admin-tab active" data-tab="orders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Orders
+          <span class="tab-badge hidden" id="new-orders-badge">0</span>
+        </button>
+        <button class="admin-tab" data-tab="products">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          Products
+        </button>
+      </div>
+
+      <!-- ─── Orders Panel ───────────────────── -->
+      <section class="admin-panel" id="orders-panel">
+        <div class="panel-header">
+          <h2>📋 Orders</h2>
+          <div class="panel-actions">
+            <select class="filter-select" id="order-status-filter">
+              <option value="all">All Orders</option>
+              <option value="pending">Pending</option>
+              <option value="accepted">Accepted</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button class="btn-refresh" id="refresh-orders-btn" title="Refresh Orders">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="orders-list" id="orders-list">
+          <div class="orders-empty" id="orders-empty">
+            <div class="empty-icon">📭</div>
+            <h3>No orders yet</h3>
+            <p>When customers place orders, they'll appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Products Panel ─────────────────── -->
+      <section class="admin-panel hidden" id="products-panel">
+        <div class="panel-header">
+          <h2>🛍️ Products</h2>
+          <button class="btn-add-new" id="add-product-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Product
+          </button>
+        </div>
+
+        <!-- Add Product Form (collapsible) -->
+        <div class="add-product-form hidden" id="add-product-form">
+          <h3>Add New Product</h3>
+          <form id="product-form">
+            <div class="product-form-grid">
+              <div class="form-group">
+                <label for="product-name">Name *</label>
+                <input type="text" id="product-name" required placeholder="e.g. Organic Apples" />
+              </div>
+              <div class="form-group">
+                <label for="product-category">Category *</label>
+                <select id="product-category" required>
+                  <option value="">Select category</option>
+                  <option value="Fruits">🍎 Fruits</option>
+                  <option value="Vegetables">🥦 Vegetables</option>
+                  <option value="Dairy">🧀 Dairy</option>
+                  <option value="Bakery">🍞 Bakery</option>
+                  <option value="Beverages">🥤 Beverages</option>
+                  <option value="Snacks">🍿 Snacks</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="product-price">Price (₹) *</label>
+                <input type="number" id="product-price" required placeholder="149" min="0" step="1" />
+              </div>
+              <div class="form-group">
+                <label for="product-unit">Unit *</label>
+                <input type="text" id="product-unit" required placeholder="e.g. 1 kg" />
+              </div>
+              <div class="form-group">
+                <label for="product-emoji">Emoji</label>
+                <input type="text" id="product-emoji" placeholder="🍎" maxlength="4" />
+              </div>
+              <div class="form-group">
+                <label for="product-rating">Rating</label>
+                <input type="number" id="product-rating" placeholder="4.5" min="0" max="5" step="0.1" />
+              </div>
+              <div class="form-group full-width">
+                <label for="product-description">Description</label>
+                <input type="text" id="product-description" placeholder="Brief product description" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save-product" id="save-product-btn">Save Product</button>
+              <button type="button" class="btn-cancel" id="cancel-product-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="products-table-wrap">
+          <table class="products-table" id="products-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Unit</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+          <div class="products-empty hidden" id="products-empty">
+            <div class="empty-icon">📦</div>
+            <h3>No products found</h3>
+            <p>Add your first product to get started.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ─── ORDER DETAIL MODAL ──────────────────── -->
+  <div class="modal-overlay" id="order-detail-overlay">
+    <div class="modal order-detail-modal" id="order-detail-modal">
+      <div class="modal-header">
+        <h2 id="order-detail-title">Order #0000</h2>
+        <button class="modal-close" id="order-detail-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="order-detail-body" id="order-detail-body">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TOAST ──────────────────────────────── -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ─── SCRIPTS ────────────────────────────── -->
+  <script src="js/admin.js"></script>
+
+</body>
+</html>
